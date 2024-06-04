@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	  xmlns:h="http://java.sun.com/jsf/html"
+	  xmlns:f="http://java.sun.com/jsf/core"
+	  xmlns:p="http://primefaces.org/ui"
+	  xmlns:ui="http://java.sun.com/jsf/facelets"
+	  template="/templates/modeloSistema.xhtml">
+
+	<ui:define name="menu">
+		<ui:include src="/includes/menuPrincipal.xhtml"/>
+	</ui:define>
+	
+	<ui:define name="conteudo">
+	
+		<h:form id="formConsultaFabricantes">
+			<p:dataTable id="dtFabricantes" widgetVar="wvFabricantes"
+						 emptyMessage="Nenhum registro encontrado."
+						 value="#{FabricanteMb.itens}"
+						 var="item"
+						 filteredValue="#{FabricanteMb.itensFiltrados}"
+						 paginator="true"
+						 rows="8">
+	
+				<f:facet name="header">
+					Fabricante - Listagem
+				</f:facet>
+	
+				<p:column headerText="Código" sortBy="#{item.codigo}" filterBy="#{item.codigo}">
+					<h:outputText value="#{item.codigo}"/>
+				</p:column>
+				<p:column headerText="Descrição" sortBy="#{item.descricao}" filterBy="#{item.descricao}">
+					<h:outputText value="#{item.descricao}"/>
+				</p:column>
+				
+				<p:column headerText="Opções">
+					<p:commandButton icon="ui-icon-pencil"
+									 oncomplete="PF('dlgEditarFabricante').show()"
+									 update=":formEditarFabricante:pgEditarFabricante">
+						<f:setPropertyActionListener target="#{FabricanteMb.fabricante}" value="#{item}"/>				 
+					</p:commandButton>
+					
+					<p:commandButton icon="ui-icon-trash"
+									 oncomplete="PF('dlgExcluirFabricante').show()"
+									 update=":formExcluirFabricante:pgExcluirFabricante">
+						<f:setPropertyActionListener target="#{FabricanteMb.fabricante}" value="#{item}"/>
+					</p:commandButton>
+				</p:column>
+				
+				<f:facet name="footer">
+					<p:commandButton value="Novo" 
+									 actionListener="#{FabricanteMb.prepararNovo}"
+									 oncomplete="PF('dlgCadastroFabricante').show()"
+									 update=":formNovoFabricante:pgNovoFabricante"/>
+				</f:facet>
+				
+			</p:dataTable>
+		</h:form>
+		
+		<p:dialog widgetVar="dlgCadastroFabricante"  closable="false" 
+				  draggable="false"  resizable="false" modal="true"
+				  appendTo="@(body)" header="Fabricante - Novo">
+
+			<h:form id="formNovoFabricante">
+				<h:panelGrid id="pgNovoFabricante" columns="2">
+					<p:outputLabel for="inputDescNovoFab" value="Descrição:" />
+					<p:inputText id="inputDescNovoFab" size="30" maxlength="50" value="#{FabricanteMb.fabricante.descricao}"
+								 required="true"
+								 requiredMessage="O campo descrição é obrigatório." />
+				</h:panelGrid>
+				<h:panelGrid columns="2">
+					<p:commandButton value="Gravar" actionListener="#{FabricanteMb.novo}" 
+									 oncomplete="verificarCamposRequeridos(xhr, status, args, 'dlgCadastroFabricante', 'wvFabricantes')"
+									 update=":formConsultaFabricantes:dtFabricantes :msgGlobal"/>
+					
+					<p:commandButton value="Cancelar" process="@this"
+									 onclick="PF('dlgCadastroFabricante').hide()">
+									 
+									 <p:resetInput target="pgNovoFabricante"/>
+					</p:commandButton>
+				</h:panelGrid>
+			
+			</h:form>
+		</p:dialog>	
+		
+		
+		<p:dialog widgetVar="dlgExcluirFabricante"  closable="false" 
+				  draggable="false"  resizable="false" modal="true"
+				  appendTo="@(body)" header="Fabricante - Excluir">
+
+			<h:form id="formExcluirFabricante">
+				<h:panelGrid id="pgExcluirFabricante" columns="2">
+					<p:outputLabel value="Código:" />
+					<p:outputLabel value="#{FabricanteMb.fabricante.codigo}" />
+					
+					<p:outputLabel value="Descrição:" />
+					<p:outputLabel value="#{FabricanteMb.fabricante.descricao}" />
+				</h:panelGrid>
+				<h:panelGrid columns="2">
+					<p:commandButton value="Excluir" actionListener="#{FabricanteMb.excluir}" oncomplete="PF('dlgExcluirFabricante').hide(); wvFabricantes.clearFilters();"
+					update=":formConsultaFabricantes:dtFabricantes :msgGlobal"/>
+					
+					<p:commandButton value="Cancelar"
+									 process="@this" 
+									 onclick="PF('dlgExcluirFabricante').hide()"/>
+				</h:panelGrid>
+			</h:form>
+		</p:dialog>	
+		
+		
+		<p:dialog widgetVar="dlgEditarFabricante"  closable="false" 
+				  draggable="false"  resizable="false" modal="true"
+				  appendTo="@(body)" header="Fabricante - Editar">
+
+			<h:form id="formEditarFabricante">
+				<h:panelGrid id="pgEditarFabricante" columns="2">
+					<p:outputLabel value="Código:" />
+					<p:outputLabel value="#{FabricanteMb.fabricante.codigo}" />
+				
+					<p:outputLabel for="inputDescEditFab" value="Descrição:" />
+					<p:inputText id="inputDescEditFab" 
+								 size="30" maxlength="50" value="#{FabricanteMb.fabricante.descricao}"
+								 required="true" requiredMessage="O campo descrição é obrigatório" />
+				</h:panelGrid>
+				<h:panelGrid columns="2">
+					<p:commandButton value="Editar" actionListener="#{FabricanteMb.editar}" oncomplete="verificarCamposRequeridos(xhr, status, args, 'dlgEditarFabricante', 'wvFabricantes')"
+					update=":formConsultaFabricantes:dtFabricantes :msgGlobal"/>
+					
+					<p:commandButton value="Cancelar" 
+									 process="@this"
+									 onclick="PF('dlgEditarFabricante').hide()">
+									 
+									 <p:resetInput target="pgEditarFabricante"/>
+					</p:commandButton>
+				</h:panelGrid>
+			
+			</h:form>
+		</p:dialog>	
+	
+	</ui:define>
+
+</ui:composition>

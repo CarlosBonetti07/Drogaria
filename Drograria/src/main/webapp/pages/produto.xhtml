@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	  xmlns:h="http://java.sun.com/jsf/html"
+	  xmlns:f="http://java.sun.com/jsf/core"
+	  xmlns:p="http://primefaces.org/ui"
+	  xmlns:ui="http://java.sun.com/jsf/facelets"
+	  template="/templates/modeloSistema.xhtml">
+
+	<ui:define name="menu">
+		<ui:include src="/includes/menuPrincipal.xhtml"/>
+	</ui:define>
+	
+	<ui:define name="conteudo">
+<!-- 		<f:event listener="ProdutoMb.carregarListagem" type="preRenderView"/> -->
+<!-- appendTo="@(body)"	 Para dizer que é um item desacoplado da tela principal-->
+
+		<h:form id="formConsultaProdutos">
+			<p:dataTable id="dtProdutos" widgetVar="wvProdutos"
+						 value="#{ProdutoMb.itens}"
+						 var="item"
+						 emptyMessage="Nenhum registro encontrado."
+						 paginator="true"
+						 rows="8"
+						 filteredValue="#{ProdutoMb.itensFiltrados}">
+				
+				<f:facet name="header">
+					<h:outputText value="Produto - Listagem"/>
+				</f:facet>
+				
+				<p:column headerText="Código" sortBy="#{item.codigo}" filterBy="#{item.codigo}">
+					<h:outputText value="#{item.codigo}"/>
+				</p:column>
+				<p:column headerText="Dscrição" sortBy="#{item.descricao}" filterBy="#{item.descricao}">
+					<h:outputText value="#{item.descricao}"/>
+				</p:column>
+				<p:column headerText="Preço" sortBy="#{item.preco}">
+					<h:outputText value="#{item.preco}">
+						<f:convertNumber pattern="0.00"/>
+					</h:outputText>
+				</p:column>
+				<p:column headerText="Quantidade" sortBy="#{item.quantidade}">
+					<h:outputText value="#{item.quantidade}"/>
+				</p:column>
+				<p:column headerText="Fabricante" sortBy="#{item.fabricante.descricao}" filterBy="#{item.fabricante.descricao}">
+					<h:outputText value="#{item.fabricante.descricao}"/>
+				</p:column>
+				
+				
+				<p:column headerText="Opções">
+					<p:commandButton icon="ui-icon-trash" oncomplete="PF('dlgExcluirProduto').show();"
+									 update=":formExcluirProduto:pgExcluirProduto">
+						<f:setPropertyActionListener target="#{ProdutoMb.produto}" value="#{item}"/>
+					</p:commandButton>
+					
+					<p:commandButton icon="ui-icon-pencil" 
+								     actionListener="#{ProdutoMb.prepararEditar}"
+								     oncomplete="PF('dlgEditarProduto').show();"
+									 update=":msgGlobal :formEditarProduto:pgEditarProduto">
+						<f:setPropertyActionListener target="#{ProdutoMb.produto}" value="#{item}"/>
+					</p:commandButton>
+				</p:column>
+				
+				<f:facet name="footer">
+					<p:commandButton value="Novo" oncomplete="PF('dlgCadastroProduto').show();"
+									 actionListener="#{ProdutoMb.prepararNovo}"
+									 update=":formCadastroProdutos:pgCadastroProduto :msgGlobal"/>
+				</f:facet>
+				
+			</p:dataTable>
+		</h:form>
+		
+		
+			<p:dialog widgetVar="dlgCadastroProduto" closable="false" draggable="false" resizable="false"
+					  header="Produto - Novo" modal="true" appendTo="@(body)">
+			
+			<h:form id="formCadastroProdutos">
+				<h:panelGrid id="pgCadastroProduto" columns="2">
+					<p:outputLabel for="inputCadDescProd" value="Descrição:" />
+					<p:inputText id="inputCadDescProd" value="#{ProdutoMb.produto.descricao}" maxlength="50" size="30"
+								 required="true" requiredMessage="O campo descrição é obrigatório"/>
+
+					<p:outputLabel for="inputCadPrecoProd" value="Preço:" />
+					<p:inputText id="inputCadPrecoProd" value="#{ProdutoMb.produto.preco}" size="10"
+								 required="true" requiredMessage="O campo preço é obrigatório"
+								 converterMessage="Informe um valor válido para o campo preço"
+								 validatorMessage="Informe um valor maior ou igual a zero">
+								 
+								 <f:convertNumber pattern="0.00"/>
+								 <f:validateDoubleRange minimum="0.00"/>
+					</p:inputText>
+								 
+								 
+					
+					<p:outputLabel for="inputCadQtdProd" value="Quantidade:" />
+					<p:inputText id="inputCadQtdProd" value="#{ProdutoMb.produto.quantidade}" size="10"
+								 required="true" requiredMessage="O campo quantidade é obrigatório"
+								 converterMessage="Informe um valor válido para o campo quantidade"
+								 validatorMessage="A quantidade minima é zero">
+					
+								<f:validateLongRange minimum="0"/>
+					</p:inputText>			 
+					
+					<p:outputLabel for="comboCadFabProd" value="Fabricante:"/>
+					<p:selectOneMenu id="comboCadFabProd" value="#{ProdutoMb.produto.fabricante.codigo}" filter="true"
+								     required="true" requiredMessage="O campo fabricante é obrigatório">
+					
+						<f:selectItem itemValue="" itemLabel="Selecione um Fabricante"/>
+						<f:selectItems value="#{ProdutoMb.comboFabricantes}" var="item"
+									   itemValue="#{item.codigo}" itemLabel="#{item.descricao}"/>
+					</p:selectOneMenu>
+					
+				</h:panelGrid>
+				
+				<h:panelGrid columns="2">
+					<p:commandButton value="Gravar" actionListener="#{ProdutoMb.novo}"
+								     update=":msgGlobal :formConsultaProdutos:dtProdutos"
+								     oncomplete="verificarCamposRequeridos(xhr, status, args, 'dlgCadastroProduto', 'wvProdutos')"/>				
+					
+					<p:commandButton value="Cancelar" 
+									 process="@this"
+									 oncomplete="PF('dlgCadastroProduto').hide();">
+									
+									<p:resetInput target="pgCadastroProduto"/>				 
+					</p:commandButton>				
+				</h:panelGrid>
+				
+			</h:form>
+			
+			</p:dialog>
+			
+		
+		
+		
+		
+		   <p:dialog widgetVar="dlgExcluirProduto"  closable="false" 
+				  draggable="false"  resizable="false" header="Produto - Excluir"
+				  modal="true" appendTo="@(body)">
+
+			<h:form id="formExcluirProduto">
+				<h:panelGrid id="pgExcluirProduto" columns="2">
+					<p:outputLabel value="Código:"/>
+					<h:outputText value="#{ProdutoMb.produto.codigo}"/>
+					
+					<p:outputLabel value="Descrição:"/>
+					<h:outputText value="#{ProdutoMb.produto.descricao}"/>
+
+					<p:outputLabel value="Preço:"/>
+					<h:outputText value="#{ProdutoMb.produto.preco}">
+						<f:convertNumber pattern="0.00"/>
+					</h:outputText>
+
+					<p:outputLabel value="Quantidade:"/>
+					<h:outputText value="#{ProdutoMb.produto.quantidade}"/>
+				
+					<p:outputLabel value="Fabricante:"/>
+					<h:outputText value="#{ProdutoMb.produto.fabricante.descricao}"/>
+				
+				</h:panelGrid>
+
+				<h:panelGrid columns="2">
+					<p:commandButton value="Excluir" actionListener="#{ProdutoMb.excluir}"
+								     update=":msgGlobal :formConsultaProdutos:dtProdutos"
+								     oncomplete="PF('dlgExcluirProduto').hide(); wvProdutos.clearFilters();"/>
+								     
+					<p:commandButton value="Cancelar" 
+									 process="@this"
+									 oncomplete="PF('dlgExcluirProduto').hide();"/>
+				</h:panelGrid>
+				
+				
+			</h:form>
+		</p:dialog>	
+		
+		
+		
+		
+		<p:dialog widgetVar="dlgEditarProduto"  closable="false" 
+				  draggable="false"  resizable="false" header="Produto - Editar"
+				  modal="true" appendTo="@(body)">
+
+			<h:form id="formEditarProduto">
+				<h:panelGrid id="pgEditarProduto" columns="2">
+					<p:outputLabel value="Código:"/>
+					<h:outputText value="#{ProdutoMb.produto.codigo}"/>
+					
+					<p:outputLabel for="inputEditDescProd" value="Descrição:"/>
+					<p:inputText id="inputEditDescProd" value="#{ProdutoMb.produto.descricao}" maxlength="50" size="30"
+								 required="true" requiredMessage="O campo descrição é obrigatório"/>
+					
+					<p:outputLabel for="inputEditPrecoProd" value="Preço:"/>
+					<p:inputText id="inputEditPrecoProd" value="#{ProdutoMb.produto.preco}" size="10"
+								 required="true" requiredMessage="O campo preço é obrigatório"
+								 converterMessage="Informe um valor válido para o campo preço"
+								 validatorMessage="Informe um valor maior ou igual a zero">
+								 
+								 <f:convertNumber pattern="0.00"/>
+								 <f:validateDoubleRange minimum="0.00"/>
+					</p:inputText>
+
+
+					
+					<p:outputLabel for="inputEditQtdProd" value="Quantidade:"/>
+					<p:inputText id="inputEditQtdProd" value="#{ProdutoMb.produto.quantidade}" size="10"
+								 required="true" requiredMessage="O campo quantidade é obrigatório"
+								 converterMessage="Informe um valor válido para o campo quantidade"
+								 validatorMessage="A quantidade minima é zero">
+					
+								<f:validateLongRange minimum="0"/>
+					</p:inputText>
+					
+					<p:outputLabel for="comboEditFabProd" value="Fabricante:"/>
+					<p:selectOneMenu id="comboEditFabProd" value="#{ProdutoMb.produto.fabricante.codigo}" filter="true"
+									 required="true" requiredMessage="O campo fabricante é obrigatório">
+					
+						<f:selectItem itemValue="" itemLabel="Selecione um Fabricante"/>
+						<f:selectItems value="#{ProdutoMb.comboFabricantes}" var="item"
+									   itemValue="#{item.codigo}" itemLabel="#{item.descricao}"/>
+					</p:selectOneMenu>
+					
+				</h:panelGrid>
+				
+				<h:panelGrid columns="2">
+					<p:commandButton value="Editar" actionListener="#{ProdutoMb.editar}"
+									 update=":msgGlobal :formConsultaProdutos:dtProdutos"
+									 oncomplete="verificarCamposRequeridos(xhr, status, args, 'dlgEditarProduto', 'wvProdutos')"/>
+					
+					<p:commandButton value="Cancelar" 
+									 process="@this"
+									 oncomplete="PF('dlgEditarProduto').hide();">
+									 
+									 <p:resetInput target="pgEditarProduto"/>
+					</p:commandButton>
+				</h:panelGrid>
+			
+			</h:form>
+		</p:dialog>	
+		
+		
+		
+	</ui:define>
+
+</ui:composition>
