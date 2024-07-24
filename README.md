@@ -1,4 +1,3 @@
-Projeto Drogaria
 Este projeto utiliza uma combinação de bibliotecas para fornecer uma interface web robusta e interativa, 
 juntamente com a funcionalidade de back-end e integração com banco de dados. Abaixo estão as bibliotecas 
 principais utilizadas e suas respectivas funções:
